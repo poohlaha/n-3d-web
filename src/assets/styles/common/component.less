@@ -1,0 +1,114 @@
+/**
+ * @fileOverview components
+ * @date 2024-2-5
+ * @author poohlaha
+ */
+.m-table {
+  &.border {
+    border: @border;
+    border-radius: 4px;
+
+    .m-header {
+      border: unset !important;
+    }
+  }
+
+  .m-header {
+    background: @background_table_head; // #f7f9fa, rgba(0, 0, 0, 0.04)
+    border: @border;
+    padding: 12px 12px;
+
+    .m-column {
+      padding: 0 12px;
+      color: @color;
+      .font-weight-bold();
+    }
+
+    .m-column:first-child {
+      padding-left: 0 !important;
+    }
+
+    .m-column:last-child {
+      padding-right: 0 !important;
+    }
+  }
+
+  .m-body {
+    .m-row {
+      cursor: pointer;
+      width: 100%;
+      overflow-x: auto;
+      padding: 0 12px;
+
+      &:hover {
+        background: @color_menu_active;
+        border-radius: 4px;
+      }
+
+      .m-cell {
+        padding: 12px;
+      }
+
+      .m-cell-actions > *:not(:last-child) {
+        margin-right: 10px;
+      }
+
+      .m-cell:first-child {
+        padding-left: 0 !important;
+      }
+
+      .m-cell:last-child {
+        padding-right: 0 !important;
+      }
+    }
+
+    .m-row:not(:last-child) {
+      border-bottom: @border;
+    }
+  }
+}
+
+// 锚点
+.m-anchor {
+  .m-anchor-left {
+    width: 130px;
+    padding: 10px;
+    border-right: @border;
+
+    .m-anchor-links {
+      .m-anchor-link {
+        margin-bottom: 8px;
+        color: @color_gray_light;
+        background: #f4f5f7;
+        padding: 6px;
+        border-radius: 2px;
+      }
+
+      .m-anchor-link.active {
+        background: #f0f8ff;
+        color: @color;
+        border-right: 2px solid @theme;
+      }
+    }
+
+    .m-anchor-step:before {
+      position: relative;
+      display: block;
+      width: 2px;
+      height: 100%;
+      margin: 0 auto;
+      background-color: #f0f0f0;
+      content: '';
+    }
+  }
+
+  .m-anchor-right {
+    margin-left: 20px;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    .m-anchor-content:not(:last-child) {
+      border-bottom: @border;
+    }
+  }
+}

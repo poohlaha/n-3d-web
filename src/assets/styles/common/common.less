@@ -1,0 +1,296 @@
+/**
+ * @fileOverview common
+ * @date 2023-7-4
+ * @author poohlaha
+ */
+
+// m-card
+.m-card {
+  width: 300px;
+  height: 360px;
+  margin: 0;
+  padding: 0;
+  color: @color;
+  background: #ffffff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    box-shadow:
+      0 1px 2px -2px rgba(0, 0, 0, 0.16),
+      0 3px 6px 0 rgba(0, 0, 0, 0.12),
+      0 5px 12px 4px rgba(0, 0, 0, 0.09);
+  }
+
+  &.m-card-border {
+    border: @border;
+  }
+
+  &.m-card-border-radius {
+    border-radius: @border_radius;
+  }
+
+  .m-card-cover {
+    margin-top: -1px;
+    margin-inline-start: -1px;
+    margin-inline-end: -1px;
+    height: 160px;
+
+    & > * {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    img {
+      object-fit: cover;
+      border-radius: @border_radius @border_radius 0 0;
+    }
+  }
+
+  .m-card-body {
+    flex: 1;
+    padding: 24px;
+    border-radius: 0 0 @border_radius @border_radius;
+
+    .m-card-meta {
+      display: flex;
+      flex-direction: column;
+
+      & > div:not(:last-child) {
+        margin-bottom: 8px;
+      }
+
+      .m-card-meta-title {
+        color: @color;
+        font-weight: 600;
+        font-size: @font_large;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .m-card-meta-name {
+        color: @color_gray_lighter;
+        font-weight: 400;
+        font-size: @font;
+      }
+
+      .m-card-meta-desc {
+        white-space: pre-line;
+        color: rgba(0, 0, 0, 0.45);
+        font-size: @font_small;
+      }
+    }
+  }
+
+  .m-card-actions {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: #ffffff;
+    border-top: @border;
+    display: flex;
+    border-radius: 0 0 @border_radius @border_radius;
+    height: 50px;
+
+    li {
+      width: 50%;
+      padding: 12px 0;
+      color: rgba(0, 0, 0, 0.45);
+      text-align: center;
+      height: 100%;
+
+      .svg-box:not(:last-child) {
+        border-right: @border;
+      }
+    }
+  }
+}
+
+.red,
+.failed,
+.delete,
+.stop {
+  color: #f5222d !important;
+}
+
+.step-gray {
+  background: #f0f0f0;
+}
+
+.step-process {
+  background: @theme_to!important;
+}
+
+.step-failed,
+.step-stop {
+  background: #f8e2e3 !important;
+}
+
+.step-success {
+  background: #def7d2 !important;
+}
+
+.green,
+.success {
+  color: #52c41a !important;
+}
+
+.border-success {
+  border: 1px solid #52c41a !important;
+}
+
+.border-failed {
+  border: 1px solid #f5222d !important;
+}
+
+.border-process {
+  border: 1px solid @theme!important;
+}
+
+.theme {
+  color: @theme!important;
+}
+
+.theme-hover {
+  &:hover {
+    color: @theme!important;
+  }
+}
+
+.theme-bg {
+  background: @theme!important;
+  color: @color_theme_inner;
+}
+
+.theme-to-bg {
+  background: @theme_to!important;
+}
+
+.background-left {
+  background: @background_left;
+}
+
+.background-right {
+  background: @background_right;
+}
+
+.theme-blue-color {
+  color: @theme_blue;
+}
+
+.background {
+  background: @background;
+}
+
+/* border */
+.border {
+  border: @border;
+}
+
+.border-top {
+  border-top: @border;
+}
+
+.border-left {
+  border-left: @border;
+}
+
+.border-right {
+  border-right: @border;
+}
+
+.border-bottom {
+  border-bottom: @border;
+}
+
+.border-theme {
+  border: @border_theme;
+}
+
+.color {
+  color: @color;
+}
+
+.color-bg {
+  color: @background;
+}
+
+.color-desc {
+  color: @color_desc;
+}
+
+.color-gray {
+  color: @color_gray;
+}
+
+.background-gay {
+  background: @background_gay;
+}
+
+.color-svg {
+  color: @color_svg;
+}
+
+.color-gray-light {
+  color: @color_gray_light;
+}
+
+.color-gray-lighter {
+  color: @color_gray_lighter;
+}
+
+.bg-menu-hover {
+  &:hover {
+    background: @color_menu_active;
+  }
+}
+
+.border-hover {
+  &:hover {
+    border: @border;
+  }
+}
+
+.word-break {
+  word-break: break-word;
+}
+
+.max-h100 {
+  max-height: 100%;
+}
+
+.folder-color {
+  color: #74cffb;
+}
+
+.bg-menu-active {
+  background: @color_menu_active;
+}
+
+.bg-card {
+  background: @background_card;
+}
+
+.red {
+  color: #ed2121;
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.z-99 {
+  z-index: 99;
+}
+
+.z-999 {
+  z-index: 999;
+}
+
+.z-100 {
+  z-index: 100;
+}

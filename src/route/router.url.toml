@@ -1,0 +1,22 @@
+# 前端路由, 需要按模块分
+MAIN_URL = '/'
+NOT_FOUND_URL = '/404'
+
+PROCESS_URL = '/process'
+COMMAND_URL = '/command'
+DIRECTORY_URL = '/directory'
+NGINX_URL = '/nginx'
+
+# 控制台
+[DASHBOARD]
+KEY = 'dashboard'
+NAME = '控制台'
+URL = '/'
+
+[ROOM]
+KEY = 'room'
+NAME = '房间'
+URL = '/room'
+DESCRIPTION = '自动走动'
+
+

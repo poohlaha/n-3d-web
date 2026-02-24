@@ -1,0 +1,31 @@
+/**
+ * @fileOverview 动画样式
+ * @date 2023-3-14
+ * @author poohlaha
+ */
+
+/* 动画支持 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  transition: none !important;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 9999;
+}
+::view-transition-new(root) {
+  z-index: 1;
+}
+.dark::view-transition-old(root) {
+  z-index: 1;
+}
+.dark::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* 阻止系统动画冲突 */
+.stop-transition *,
+.stop-transition {
+  transition: none !important;
+}

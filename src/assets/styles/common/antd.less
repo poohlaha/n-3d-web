@@ -1,0 +1,848 @@
+/**
+ * @fileOverview antd, 阿里样式需要统一设置为 m-ant 开头
+ * @date 2023-4-19
+ * @author poohlaha
+ */
+// alert
+.ant-alert {
+  border-radius: 0;
+}
+
+// modal
+.ant-modal-root {
+  z-index: 99;
+  position: relative;
+
+  .font-unset();
+
+  .ant-modal {
+    .font-unset();
+  }
+
+  .ant-modal-header {
+    background: transparent !important;
+
+    .ant-modal-title {
+      color: @color!important;
+      .font-unset();
+      .font-weight-bold();
+    }
+  }
+
+  .ant-modal-content {
+    background: @background!important;
+    color: @color;
+
+    .ant-input,
+    .ant-input-password {
+      // background: @background_card;
+    }
+
+    .ant-modal-close-x {
+      color: @color!important;
+    }
+
+    .ant-input-password {
+      .ant-input-suffix {
+        .ant-input-password-icon {
+          color: @color!important;
+        }
+      }
+    }
+
+    .ant-modal-body {
+      .font-unset();
+      border-top: @border;
+
+      .modal-body {
+        .form-item {
+          .label {
+            min-width: 90px;
+
+            span {
+              color: #f5222d;
+              margin-left: 3px;
+            }
+          }
+        }
+      }
+    }
+
+    .ant-modal-footer {
+      .ant-btn-default {
+        background: @background!important;
+        color: @color!important;
+        border: @border!important;
+
+        &:hover {
+          border: 1px solid @theme!important;
+          color: @theme!important;
+        }
+      }
+
+      .ant-btn-primary {
+        background-color: @theme;
+      }
+    }
+  }
+}
+
+// input search
+.search {
+  border-radius: 0 !important;
+  height: 32px;
+  font-weight: 700;
+  background: transparent;
+  width: 100%;
+  border-bottom: @border;
+  border-top: unset;
+  border-left: unset;
+  border-right: unset;
+  box-shadow: unset;
+  border-bottom: @border;
+}
+
+// search
+.ant-input-search {
+  height: 40px;
+
+  .ant-input-wrapper,
+  input,
+  .ant-input-group-addon button {
+    height: 100%;
+  }
+}
+
+// tree
+.ant-tree-list {
+  padding: 10px;
+
+  .ant-tree-list-holder-inner {
+    .ant-tree-treenode {
+      padding: 0 0 8px 0 !important;
+    }
+
+    .ant-tree-node-content-wrapper {
+      padding: 0 4px !important;
+
+      &:hover {
+        .ant-tree-title {
+          color: @theme;
+        }
+      }
+    }
+
+    .ant-tree-node-content-wrapper-open,
+    .ant-tree-node-content-wrapper-close {
+      font-weight: bold;
+    }
+  }
+}
+
+// table
+.m-ant-table,
+.ant-table {
+  .font-unset();
+  background: @background_right;
+  color: @color;
+}
+
+.m-ant-table {
+  .font-unset();
+
+  &.ant-table-wrapper .ant-table-tbody .ant-table-row.ant-table-row-selected > .ant-table-cell {
+    background: @theme_to !important;
+  }
+
+  .ant-table-thead .ant-table-cell {
+    background: @background_table_head !important;
+    color: @color!important;
+    font-weight: 550 !important;
+    border-bottom: @border;
+
+    &.ant-table-cell-scrollbar {
+      background: @background_table_head !important;
+      box-shadow: unset !important;
+    }
+
+    .font-unset();
+  }
+
+  .ant-table-thead {
+    .ant-table-cell::before {
+      background: @divider!important;
+    }
+  }
+
+  tbody > tr > td {
+    border-bottom: @border!important;
+  }
+
+  .ant-table-tbody {
+    tr {
+      cursor: pointer;
+    }
+
+    .ant-table-cell-fix-right,
+    .ant-table-cell-fix-left {
+      background: @background_right;
+      color: @color;
+    }
+
+    .ant-table-cell-row-hover {
+      background: @color_menu_active;
+      color: @color;
+    }
+
+    .ant-table-cell {
+      button.ant-table-row-expand-icon {
+        &:hover,
+        &:focus-within,
+        &:focus {
+          border-color: @theme;
+          color: @theme;
+        }
+      }
+    }
+  }
+}
+
+// .ant-drawer
+.ant-drawer {
+  // font-size: @font;
+}
+
+// .ant-tooltip
+.ant-tooltip {
+  &.tooltip-multi-line {
+    .ant-tooltip-content {
+      .ant-tooltip-inner {
+        white-space: pre-line;
+      }
+    }
+  }
+}
+
+*::-webkit-input-placeholder,
+&::-webkit-input-placeholder {
+  color: @color_gray_light!important;
+}
+
+*:-moz-placeholder,
+&:-moz-placeholder {
+  /* FF 4-18 */
+  color: @color_gray_light!important;
+}
+
+*::-moz-placeholder,
+&::-moz-placeholder {
+  /* FF 19+ */
+  color: @color_gray_light!important;
+}
+
+*:-ms-input-placeholder,
+&:-ms-input-placeholder {
+  /* IE 10+ */
+  color: @color_gray_light!important;
+}
+
+[class^='ant-menu'] {
+  font-family: inherit !important;
+}
+
+// menu
+.m-ant-menu {
+  .ant-menu-item-item {
+    width: 100% !important;
+    padding-left: 0 !important;
+  }
+
+  .ant-menu-item {
+    &:hover {
+      border-radius: 0;
+    }
+  }
+
+  .ant-menu-item-group-title {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+    // font-size: @font;
+    // color: @color_gray;
+    // font-weight: 500;
+    // border-bottom: @border;
+  }
+
+  .ant-menu-item-group-list {
+    li:not(:last-child) {
+      margin-bottom: 8px;
+    }
+
+    li:first-child {
+      margin-top: 8px;
+    }
+  }
+
+  .ant-menu-item:not(.ant-menu-item-only-child) {
+    padding-left: 12px !important;
+  }
+
+  border-inline-end: unset !important;
+
+  .ant-menu-sub.ant-menu-inline {
+    background: unset !important;
+  }
+
+  .ant-menu-submenu-title:active {
+    background: @theme_to;
+  }
+
+  .ant-menu-submenu-title:not(.ant-menu-item-disabled):focus-visible {
+    outline: unset !important;
+  }
+
+  .ant-menu-submenu-selected > .ant-menu-submenu-title {
+    color: @theme;
+  }
+
+  .ant-menu-item-only-child {
+    outline: unset !important;
+    outline-offset: 0 !important;
+  }
+
+  .ant-menu-item:not(.ant-menu-item-selected):active {
+    background: @color_menu_active;
+  }
+
+  .ant-menu-item-selected {
+    background: @color_menu_active;
+    color: @theme;
+    border-radius: 4px !important;
+  }
+}
+
+.m-ant-tabs {
+  .font-unset();
+  color: unset !important;
+
+  .ant-tabs-nav {
+    margin: 0 !important;
+    &::before {
+      border-bottom: unset !important;
+    }
+  }
+
+  .ant-tabs-tab {
+    .font-unset();
+  }
+
+  .ant-tabs-ink-bar {
+    background: @color_active;
+  }
+
+  .ant-tabs-tab-btn {
+    color: @color;
+    text-shadow: unset !important;
+  }
+
+  &.ant-tabs-left {
+    .ant-tabs-content-holder {
+      margin-left: 0 !important;
+      border-left: unset !important;
+    }
+
+    .ant-tabs-nav-list .ant-tabs-tab {
+      border-right: @border;
+
+      &:hover {
+        color: @color_active!important;
+      }
+
+      &:not(:first-child) {
+        margin: 0 !important;
+        padding-top: 1rem !important;
+      }
+    }
+  }
+
+  .ant-tabs-tab-active {
+    // border-right: 0.1rem solid @theme!important;
+    .ant-tabs-tab-btn {
+      color: @color_active!important;
+    }
+  }
+
+  .ant-tabs-content,
+  .ant-tabs-tabpane {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// select
+.m-ant-select,
+.m-ant-table .ant-pagination .ant-select,
+.m-ant-pagination .ant-select {
+  background: unset !important;
+  color: @color;
+
+  .font-unset();
+
+  .ant-select-selector {
+    background: unset !important;
+
+    .ant-select-selection-placeholder {
+      color: @color_gray_lighter;
+    }
+  }
+
+  &.ant-select-outlined {
+    &:hover {
+      .ant-select-selector {
+        border: @border_active!important;
+        box-shadow: unset !important;
+      }
+    }
+  }
+
+  &:not(.ant-select-disabled):hover {
+    .ant-select-selector {
+      border: @border_active;
+    }
+  }
+
+  .ant-select-selection-search-input,
+  .ant-select-selector {
+    .font-unset();
+    background: unset !important;
+    border: @border;
+    color: @color;
+  }
+
+  .ant-select-arrow {
+    color: @color_svg;
+  }
+
+  &.ant-select-focused:not(.ant-select-disabled) {
+    .ant-select-selector {
+      border: @border_active!important;
+      box-shadow: unset !important;
+    }
+  }
+
+  &.ant-select-dropdown,
+  .ant-select-dropdown {
+    .rc-virtual-list {
+      .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+        background-color: @background_theme;
+
+        .ant-select-item-option-state {
+          color: @theme;
+        }
+      }
+    }
+  }
+
+  .ant-select-selection-item {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    word-break: break-word;
+    white-space: break-spaces;
+    color: @color;
+  }
+
+  .ant-select-selection-overflow-item {
+    .ant-select-selection-item {
+      display: flex !important;
+    }
+  }
+}
+
+.m-ant-select-dropdown:not(.m-ant-select) {
+  .font-unset();
+  background: @background;
+  padding: 0;
+
+  .ant-select-item {
+    .font-unset();
+
+    border-radius: unset;
+    color: @color;
+    &:not(:last-child) {
+      margin-bottom: 0.4rem;
+    }
+
+    &:hover {
+      background: @background_theme;
+      color: @color_theme_inner;
+    }
+  }
+
+  .ant-select-item-option-content {
+    .font-weight-bold();
+  }
+
+  .ant-select-item-option-selected {
+    background: @background_theme;
+    color: @color_theme_inner;
+    border-radius: unset;
+  }
+}
+
+// slider
+.m-ant-slider {
+}
+
+.m-ant-switch {
+  &.ant-switch-checked {
+    background: @theme;
+  }
+
+  &.ant-switch-checked:hover:not(.ant-switch-disabled) {
+    background: @theme;
+  }
+}
+
+// button
+.m-ant-button,
+.m-ant-modal .ant-modal-footer button,
+.m-ant-popover .ant-popconfirm-buttons button {
+  .font-unset();
+  // height: unset !important;
+
+  &:not(.disabled).ant-btn-primary,
+  &:not(.disabled).ant-btn-primary:hover {
+    background: @theme;
+    box-shadow: unset !important;
+  }
+
+  &:not(.disabled).ant-btn-default:hover {
+    border-color: @border_active;
+    // background: @color_menu_active!important;
+    box-shadow: unset !important;
+    // color: @color_theme_inner!important;
+    @color: @color_active!important;
+  }
+
+  // primary
+  &.ant-btn-primary {
+    background: @background_theme;
+    color: @color_theme_inner;
+
+    .ant-btn-icon {
+      svg {
+        color: @color_theme_inner!important;
+      }
+    }
+  }
+
+  // default
+  &.ant-btn-default {
+    background: unset !important;
+
+    &:not(.ant-btn-dangerous) {
+      color: @color!important;
+    }
+  }
+
+  &.ant-btn-variant-outlined,
+  &.ant-btn-variant-solid {
+    border: @border;
+  }
+}
+
+// popover
+.m-ant-popover {
+  .font-unset();
+
+  .ant-popconfirm-title {
+    color: @color!important;
+    .font-weight-bold();
+  }
+
+  .ant-popover-inner {
+    background: @background;
+  }
+
+  .ant-popconfirm-description {
+    color: @color;
+  }
+}
+
+// input
+.m-ant-input,
+.m-ant-input-icon {
+  .font-unset();
+  background: @background;
+
+  &.ant-input-outlined {
+    border: @border;
+  }
+
+  .ant-input-prefix svg {
+    color: @color_svg;
+  }
+
+  .ant-input-suffix {
+    .anticon-eye svg {
+      path:not(:nth-child(2)) {
+        fill: @color_active!important;
+      }
+
+      path:nth-child(2) {
+        fill: none !important;
+      }
+    }
+  }
+
+  &.ant-input-outlined:not(.ant-input-disabled):hover,
+  &.ant-input-outlined:not(.ant-input-disabled):focus-within {
+    border: @border_active!important;
+    box-shadow: unset !important;
+  }
+
+  input,
+  textarea {
+    color: @color!important;
+    .font-unset();
+  }
+}
+
+// card
+.m-ant-card {
+  .font-unset();
+
+  &.white {
+    background: #ffffff;
+  }
+
+  &:not(.white) {
+    background: @color_menu_active;
+  }
+
+  &.ant-card-bordered {
+    border: @border!important;
+  }
+
+  .ant-card-head {
+    border-bottom: @border!important;
+  }
+
+  .ant-card-head {
+    color: @color;
+    .font-unset();
+    .font-weight-bold();
+  }
+
+  .ant-card-body {
+    .ant-descriptions,
+    .ant-descriptions-item-label,
+    .ant-descriptions-item-content {
+      .font-unset();
+      color: @color!important;
+    }
+  }
+}
+
+// drawer
+.m-ant-drawer,
+.m-ant-popover,
+.markdown-body {
+  .font-unset();
+
+  .ant-drawer-content {
+    background: @background;
+  }
+
+  pre,
+  code {
+    .font-unset();
+  }
+
+  code[class*='language-'],
+  pre[class*='language-'] {
+    text-shadow: unset !important;
+  }
+
+  .token.operator {
+    background: unset !important;
+  }
+  code[class*='language-'],
+  pre[class*='language-'] {
+    .font-unset();
+  }
+}
+
+// tag
+.m-ant-tag {
+  .font-unset();
+  // color: unset!important;
+  line-height: unset !important;
+  background: unset;
+  // border: @border;
+  &:not(
+    .ant-tag-success,
+    .ant-tag-error,
+    .ant-tag-processing,
+    .ant-tag-orange,
+    .ant-tag-lime,
+    .ant-tag-gold,
+    .ant-tag-purple,
+    .ant-tag-volcano,
+    .ant-tag-cyan,
+    .ant-tag-magenta
+  ) {
+    color: @color;
+  }
+}
+
+// timeline
+.m-ant-timeline {
+  .font-unset();
+
+  .ant-timeline-item {
+    .font-unset();
+    color: @color;
+  }
+
+  .ant-timeline-item-head {
+    top: 0 !important;
+  }
+}
+
+// pagination
+.m-ant-table .ant-pagination,
+.m-ant-pagination {
+  .font-unset();
+
+  .ant-pagination-item-active {
+    border-color: @theme;
+
+    a {
+      color: @theme;
+    }
+  }
+
+  li:not(.ant-pagination-disabled):hover {
+    button {
+      background: @color_menu_active!important;
+    }
+  }
+
+  li {
+    button {
+      color: @color!important;
+    }
+  }
+
+  .ant-pagination-item-link {
+    color: @color;
+  }
+
+  .ant-pagination-total-text {
+    display: flex;
+    align-items: center;
+    color: @color;
+  }
+
+  .ant-pagination-jump-next,
+  .ant-pagination-jump-prev {
+    .ant-pagination-item-link-icon {
+      color: @theme;
+    }
+  }
+}
+
+// tooltip
+.m-ant-tooltip {
+  .font-unset();
+}
+
+// radio
+.m-ant-radio-group {
+  .font-unset();
+  color: @color!important;
+}
+
+.m-ant-radio {
+  .font-unset();
+  color: @color!important;
+}
+
+// -breadcrumb
+.m-ant-breadcrumb {
+  .font-unset();
+  color: @color;
+
+  li:last-child {
+    .ant-breadcrumb-link {
+      color: @color_active;
+    }
+  }
+
+  .ant-breadcrumb-separator {
+    color: @color_desc;
+  }
+}
+
+// radio
+.m-ant-radio-group {
+  .ant-radio-wrapper {
+    .font-unset();
+    color: unset !important;
+  }
+}
+
+/* input placeholder 样式 */
+input::-webkit-input-placeholder {
+  /* 使用webkit内核的浏览器 */
+  .font-unset();
+  color: @color_gray_lighter;
+}
+
+input:-moz-placeholder {
+  /* Firefox版本4-18 */
+  .font-unset();
+  color: @color_gray_lighter;
+}
+
+input::-moz-placeholder {
+  /* Firefox版本19+ */
+  .font-unset();
+  color: @color_gray_lighter;
+}
+
+input:-ms-input-placeholder {
+  /* IE浏览器 */
+  .font-unset();
+  color: @color_gray_lighter;
+}
+
+/* textarea placeholder 样式 */
+textarea::-webkit-input-placeholder {
+  /* 使用webkit内核的浏览器 */
+  .font-unset();
+  color: @color_gray_lighter;
+}
+
+textarea:-moz-placeholder {
+  /* Firefox版本4-18 */
+  .font-unset();
+  color: @color_gray_lighter;
+}
+
+textarea::-moz-placeholder {
+  /* Firefox版本19+ */
+  .font-unset();
+  color: @color_gray_lighter;
+}
+
+textarea:-ms-input-placeholder {
+  /* IE浏览器 */
+  .font-unset();
+  color: @color_gray_lighter;
+}

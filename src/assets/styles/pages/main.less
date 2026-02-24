@@ -1,0 +1,51 @@
+/**
+ * @fileOverview main
+ * @date 2024-02-01
+ * @author poohlaha
+ */
+.main-page {
+  .article {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+
+    .svg-icon {
+      width: 100%;
+      height: 100%;
+      color: @theme;
+    }
+  }
+
+  .server-box {
+    height: calc(100% - 56px);
+  }
+
+  .server-list {
+    .m-card:last-child {
+      margin-right: 0;
+    }
+
+    .m-card {
+      margin-right: 20px;
+      margin-bottom: 20px;
+
+      .m-card-meta-name {
+        color: @theme_orange;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+.page .status-bar {
+  font-size: @font;
+
+  .add {
+    color: @theme;
+    cursor: pointer;
+  }
+}
+
+.ant-modal-root {
+  z-index: 99;
+}
