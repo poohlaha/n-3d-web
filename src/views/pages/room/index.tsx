@@ -117,16 +117,12 @@ const Room = (): ReactElement => {
           await roomStore.onSetAction(roomStore.ACTIONS[1].value)
         }
 
-        console.log('intersectionPoint:', intersectionPoint.x, intersectionPoint.z)
+        console.log('intersectionPoint', intersectionPoint)
         // 限制在边界范围内
         const res: { [K: string]: number } = await invoke('world_to_grid', {
           grid: {
             x: intersectionPoint.x,
-            z: intersectionPoint.z,
-            character_occupy_width: roomStore.character_occupy_width,
-            character_occupy_height: roomStore.character_occupy_height,
-            width: roomStore.WIDTH,
-            height: roomStore.HEIGHT
+            z: intersectionPoint.z
           }
         })
 
@@ -136,24 +132,21 @@ const Room = (): ReactElement => {
         const worldRes: { [K: string]: number } = await invoke('grid_to_world', {
           grid: {
             gx: res.x,
-            gz: res.z,
-            character_occupy_width: roomStore.character_occupy_width,
-            character_occupy_height: roomStore.character_occupy_height,
-            width: roomStore.WIDTH,
-            height: roomStore.HEIGHT
+            gz: res.z
           }
         })
 
         // 更新目标格子
         await invoke('set_robot_target', { x: worldRes.x, z: worldRes.z })
 
-        console.log('点击位置:', worldRes.x, worldRes.z)
+        console.log('grid_to_world:', worldRes)
+        await roomStore.onPlaceFlag(intersectionPoint)
         // roomStore.onMoveCharacterToPoint(new THREE.Vector3(worldRes.x, 0, worldRes.z))
         roomStore.isMoving = true
 
         /*
-        const halfWidth = roomStore.WIDTH / 2
-        const halfHeight = roomStore.HEIGHT / 2
+        const halfWidth = roomStore.width / 2
+        const halfHeight = roomStore.height / 2
 
         const characterRadius = 2 + roomStore.WALL_THICKNESS / 2
 

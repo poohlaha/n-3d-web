@@ -26,6 +26,7 @@ class RoomStore extends BaseStore {
   @observable selectedCube: THREE.Mesh | null = null
   @observable person: THREE.Mesh | null = null // 小人
   @observable personPosition: { x: number; z: number } | null = null // 小人坐标
+  @observable redFlagModel: THREE.Object3D | null = null
 
   // 人物
   @observable mixers: Array<any> = []
@@ -45,13 +46,13 @@ class RoomStore extends BaseStore {
   @observable accumulator: number = 0
   readonly FIXED = 1 / 60
 
-  readonly WIDTH = 200
-  readonly HEIGHT = 200
+  @observable width = 0
+  @observable height = 0
   readonly WALL_THICKNESS = 0.5 // 墙厚
 
   // 机器人占用格子数
-  @observable character_occupy_width: number = 2
-  @observable character_occupy_height: number = 2
+  @observable characterOccupyWidth: number = 1
+  @observable characterOccupyHeight: number = 1
 
   readonly ACTIONS: Array<{ [K: string]: any }> = [
     {
@@ -85,6 +86,8 @@ class RoomStore extends BaseStore {
   ]
 
   @observable action: string = this.ACTIONS[0].value || ''
+  @observable isEmotePlaying: boolean = false
+
   readonly ONCE_ACTIONS = ['death', 'sitting', 'standing']
 
   readonly EMOTES: Array<{ [K: string]: any }> = [
@@ -121,6 +124,18 @@ class RoomStore extends BaseStore {
    */
   @action
   async init(container: HTMLElement) {
+    // 获取初始化属性
+    try {
+      const res: { [K: string]: any } = await invoke('get_init_props', {})
+      this.width = res.width || 200
+      this.height = res.height || 200
+      this.characterOccupyWidth = res.characterOccupyWidth || 2
+      this.characterOccupyHeight = res.characterOccupyHeight || 2
+      this.logger()?.info(`init props: ${JSON.stringify(res)}`)
+    } catch (e) {
+      this.logger()?.error(`获取机器人初始坐标失败: ${e}`)
+    }
+
     // ===============================
     // 创建场景 Scene
     // ===============================
@@ -219,9 +234,10 @@ class RoomStore extends BaseStore {
 
     // PlaneGeometry(宽, 高)
     // 几何体是以原点 (0,0,0) 为中心创建的
-    // 如果宽是 20: 左边 = -10, 右边 = +10, 因为: 中心 0, 向左 10, 向右 10, 总共 20
+    // 如果宽是 200: 左边 = -100, 右边 = +100, 因为: 中心 0, 向左 100, 向右 100, 总共 200
+    // 世界范围：-100 ~ 100, 网格：200 x 200
     // const planeGeometry = new THREE.PlaneGeometry(this.WIDTH, this.HEIGHT, 200, 200)
-    const planeGeometry = new THREE.PlaneGeometry(this.WIDTH, this.HEIGHT)
+    const planeGeometry = new THREE.PlaneGeometry(this.width, this.height)
 
     // 材质（可受光照影响）
     const planeMaterial = new THREE.MeshStandardMaterial({
@@ -271,8 +287,8 @@ class RoomStore extends BaseStore {
     // 每 1 个单位是一个格子
     // 一个 20x20 的网格
     const gridHelper = new THREE.GridHelper(
-      this.WIDTH, // 整个网格大小（要和地面一样大）
-      this.WIDTH // 分成多少格（80格 → 1格 = 1单位）
+      this.width, // 整个网格大小（要和地面一样大）
+      this.width // 分成多少格（80格 → 1格 = 1单位）
       // 0xff0000, // 中心线颜色 → 红色 0xff0000
       // 0x808080 // 其他网格线颜色 → 灰色
     )
@@ -290,8 +306,17 @@ class RoomStore extends BaseStore {
     // 设置外墙
     this.onSetOuterWall()
 
+    // 获取机器人初始坐标
+    let point = { x: 0, y: 0, z: 0 }
+    try {
+      point = await invoke('get_robot_point', {})
+      console.log('point: ', point)
+    } catch (e) {
+      this.logger()?.error(`获取机器人初始坐标失败: ${e}`)
+    }
+
     // 加载人物
-    this.onLoadPerson()
+    this.onLoadPerson(point)
 
     await this.animate()
   }
@@ -300,7 +325,7 @@ class RoomStore extends BaseStore {
    * 加载人物
    */
   @action
-  onLoadPerson() {
+  onLoadPerson(point: { [K: string]: number } = {}) {
     this.clock = new THREE.Clock()
     const loader = new GLTFLoader()
     loader.load(
@@ -308,7 +333,8 @@ class RoomStore extends BaseStore {
       gltf => {
         const model = gltf.scene
         model.scale.set(1, 1, 1)
-        model.position.set(0, 0, 0) // 放在格子中央
+        model.position.set(point.x, point.y || 0, point.z) // 放在格子中央
+        console.log('model position:', model.position)
         this.scene?.add(model)
 
         this.character = model
@@ -355,7 +381,7 @@ class RoomStore extends BaseStore {
     roughnessMap.wrapS = roughnessMap.wrapT = THREE.RepeatWrapping
 
     // 4个格子一块地砖
-    const repeatCount = this.WIDTH / 4
+    const repeatCount = this.width / 4
     colorMap.repeat.set(repeatCount, repeatCount)
     normalMap.repeat.set(repeatCount, repeatCount)
     roughnessMap.repeat.set(repeatCount, repeatCount)
@@ -456,14 +482,10 @@ class RoomStore extends BaseStore {
     if (!this.isMoving) {
       this.action = this.ACTIONS[0].value
       const idleAction = this.mixerActions[this.ACTIONS[0].value]
-      idleAction
-        .reset()
-        .setEffectiveWeight(1)
-        .play()
+      idleAction.reset().setEffectiveWeight(1).play()
       this.currentAction?.crossFadeTo(idleAction, 0.2, true)
       this.currentAction = idleAction
     }
-
   }
 
   /**
@@ -588,6 +610,9 @@ class RoomStore extends BaseStore {
   @action
   async onSetEmote(value: string = '') {
     if (this.action === this.ACTIONS[1].value || this.action === this.ACTIONS[2].value) return
+    if (this.isEmotePlaying) return
+    if (!this.mixer) return
+
     try {
       let emote = this.EMOTES.find((item: { [K: string]: any } = {}) => item.value === value) || {}
       if (Utils.isObjectNull(emote || {})) {
@@ -601,52 +626,96 @@ class RoomStore extends BaseStore {
       const mixerAction = this.mixerActions[value]
       if (!mixerAction) return
 
+      this.isEmotePlaying = true
+
       const previousAction = this.currentAction
       const idleAction = this.mixerActions[this.ACTIONS[0].value]
+
       // 切回 idle
-      if (previousAction !== idleAction) {
-        idleAction
-          .reset()
-          .setEffectiveWeight(1)
-          .play()
+      if (previousAction && previousAction !== idleAction) {
+        idleAction.reset().setEffectiveWeight(1).play()
         previousAction?.crossFadeTo(idleAction, 0.2, true)
         this.currentAction = idleAction
       }
 
-      // 播放 emote
-      mixerAction
-        .reset()
-        .setLoop(THREE.LoopOnce, 1)
-
+      // 强制彻底重置 emote
+      mixerAction.stop()
+      mixerAction.reset()
+      mixerAction.setLoop(THREE.LoopOnce, 1)
       mixerAction.clampWhenFinished = true
+      mixerAction.setEffectiveWeight(1)
       mixerAction.play()
 
-      const onFinished = (e: any) => {
-        if (e.action !== mixerAction) return
-
-        // 清理 emote
+      // 用 duration 控制恢复（比 finished 稳定）
+      const duration = mixerAction.getClip().duration
+      setTimeout(() => {
         mixerAction.stop()
         mixerAction.setEffectiveWeight(0)
 
-        if (!previousAction) return
+        if (previousAction) {
+          previousAction.reset().setEffectiveWeight(1).play()
+          idleAction.crossFadeTo(previousAction, 0.2, true)
+          this.currentAction = previousAction
+        }
 
-        // 恢复之前动作
-        previousAction
-          .reset()
-          .setEffectiveWeight(1)
-          .play()
+        this.isEmotePlaying = false
+      }, duration * 1000)
 
-        idleAction.crossFadeTo(previousAction, 0.2, true)
-
-        this.currentAction = previousAction
-        this.mixer?.removeEventListener('finished', onFinished)
-      }
-
-      this.mixer?.addEventListener('finished', onFinished)
       this.emote = ''
     } catch (e) {
       TOAST.show({ message: '设置表情失败', type: 4 })
       this.logger()?.error(`设置表情失败: ${e}`)
+    }
+  }
+
+  /**
+   * 加载红旗
+   */
+  @action
+  onLoadRedFlag(point: { [K: string]: number } = {}) {
+    // 移除旧旗
+    if (this.redFlagModel) {
+      this.scene!.remove(this.redFlagModel)
+      this.redFlagModel = null
+    }
+
+    const loader = new GLTFLoader()
+    loader.load('/models/flag.glb', gltf => {
+      const flagModel = gltf.scene
+      flagModel.position.set(point.x, point.y || 0, point.z)
+      this.scene!.add(flagModel)
+
+      this.redFlagModel = flagModel
+    })
+  }
+
+  /**
+   * 设置小红旗
+   */
+  @action
+  async onPlaceFlag(intersectionPoint: { [K: string]: any } = {}) {
+    const flagPlaced: boolean = await invoke('set_place_flag', {
+      x: intersectionPoint.x,
+      z: intersectionPoint.z
+    })
+
+    // 4转格子坐标（200×200 平面，每格 1 单位）
+    let gx = Math.floor(intersectionPoint.x + this.width / 2)
+    let gz = Math.floor(intersectionPoint.z + this.height / 2)
+
+    // 边界限制
+    gx = Math.max(0, Math.min(this.width - 1, gx))
+    gz = Math.max(0, Math.min(this.height - 1, gz))
+
+    // 计算格子中心 world 坐标
+    const centerX = gx - this.width / 2 + 0.5
+    const centerZ = gz - this.height / 2 + 0.5
+
+    if (flagPlaced) {
+      this.onLoadRedFlag({
+        x: centerX,
+        z: centerZ
+      })
     }
   }
 }
