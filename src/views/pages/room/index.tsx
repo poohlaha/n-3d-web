@@ -13,6 +13,7 @@ import useMount from '@hooks/useMount'
 import * as THREE from 'three'
 import { invoke } from '@tauri-apps/api/core'
 import { Collapse, Select } from 'antd'
+import { TOAST } from '@utils/base'
 
 const Room = (): ReactElement => {
   const { roomStore } = useStore()
@@ -22,6 +23,8 @@ const Room = (): ReactElement => {
   useMount(async () => {
     if (boxRef) {
       await roomStore.init(boxRef.current)
+      await roomStore.onGeneratePillars()
+      // await roomStore.onGenerateStones()
       onEvent()
     }
   })
@@ -112,6 +115,13 @@ const Room = (): ReactElement => {
       const hit = roomStore.raycaster!.ray.intersectPlane(roomStore.groundPlane, intersectionPoint)
 
       if (hit) {
+        const flag = await roomStore.onPlaceFlag(intersectionPoint)
+        if (!flag) {
+          roomStore.logger()?.warn('当前位置已有障碍物 ...')
+          TOAST.show({ message: '当前位置已有障碍物', type: 4 })
+          return
+        }
+
         // 切换为 walking 动作
         if (roomStore.action !== roomStore.ACTIONS[1].value && roomStore.action !== roomStore.ACTIONS[2].value) {
           await roomStore.onSetAction(roomStore.ACTIONS[1].value)
@@ -140,7 +150,6 @@ const Room = (): ReactElement => {
         await invoke('set_robot_target', { x: worldRes.x, z: worldRes.z })
 
         console.log('grid_to_world:', worldRes)
-        await roomStore.onPlaceFlag(intersectionPoint)
         // roomStore.onMoveCharacterToPoint(new THREE.Vector3(worldRes.x, 0, worldRes.z))
         roomStore.isMoving = true
 

@@ -39,6 +39,10 @@ class RoomStore extends BaseStore {
   // 地砖
   @observable textureLoader: THREE.TextureLoader | null = null
 
+  // 柱子
+  @observable pillarModel: THREE.Group | null = null
+  @observable treeModal: THREE.Group | null = null
+
   // 移动
   @observable targetPosition = new THREE.Vector3()
   @observable isMoving = false
@@ -155,11 +159,11 @@ class RoomStore extends BaseStore {
       75, // 视角
       container.clientWidth / container.clientHeight, // 宽高比
       0.1, // 最近能看到 0.1
-      1000 // 最远能看到 1000
+      5000 // 最远能看到 5000
     )
 
     // 把相机往后拉一点，否则看不到东西
-    this.camera.position.set(0, 5, 10)
+    this.camera.position.set(0, 10, 10)
 
     // 让相机看向原点
     this.camera.lookAt(0, 0, 0)
@@ -242,7 +246,8 @@ class RoomStore extends BaseStore {
     // 材质（可受光照影响）
     const planeMaterial = new THREE.MeshStandardMaterial({
       color: 0x808080,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      visible: false // 隐藏
     })
 
     // const planeMaterial = this.onLayingFloor()
@@ -295,16 +300,22 @@ class RoomStore extends BaseStore {
 
     gridHelper.position.y = 0.01 // 微微抬高格子, 防止旋转平台时抖动
 
-    this.scene.add(gridHelper)
+    // this.scene.add(gridHelper) // 不显示网格线
 
     // 红色 = X, 绿色 = Y, 蓝色 = Z
     // this.scene.add(new THREE.AxesHelper(5))
+
+    // 创建草坪
+    this.onLoadGrass()
+
+    // 加载小草
+    this.onLoadLittleGrass()
 
     // 加载背景
     this.onSetBackground()
 
     // 设置外墙
-    this.onSetOuterWall()
+    // this.onSetOuterWall()
 
     // 获取机器人初始坐标
     let point = { x: 0, y: 0, z: 0 }
@@ -319,6 +330,89 @@ class RoomStore extends BaseStore {
     this.onLoadPerson(point)
 
     await this.animate()
+  }
+
+  /**
+   * 加载草坪
+   */
+  @action
+  onLoadGrass() {
+    const loader = new GLTFLoader()
+
+    loader.load('/models/grass.glb', gltf => {
+      const grass = gltf.scene
+      const box = new THREE.Box3().setFromObject(grass)
+      const size = new THREE.Vector3()
+      box.getSize(size)
+
+      // 抬起一半高度
+      grass.position.set(0, size.y, 0)
+
+      // 如果草坪是横着的不用旋转
+      // 如果是竖着的，需要：
+      // grass.rotation.x = -Math.PI / 2
+      grass.scale.set(this.width / 2, 20, this.height / 2)
+
+      // 让草坪能接收阴影
+      grass.traverse((child: any) => {
+        if (child.isMesh) {
+          child.receiveShadow = true
+          child.castShadow = false
+        }
+      })
+
+      this.scene?.add(grass)
+    })
+  }
+
+  /**
+   * 随机生成小草
+   */
+  @action
+  onLoadLittleGrass() {
+    const grassCount = 100
+    const grassSize = 2 // 占 2 格
+    const halfMap = this.width / 2
+
+    const loader = new GLTFLoader()
+    loader.load('/models/littleGrass.glb', gltf => {
+      let grassMesh: any
+
+      // 找到真正的 mesh
+      gltf.scene.traverse((child: any) => {
+        if (child.isMesh) {
+          grassMesh = child
+        }
+      })
+
+      if (!grassMesh) return
+
+      const box = new THREE.Box3().setFromObject(grassMesh)
+      const size = new THREE.Vector3()
+      box.getSize(size)
+
+      const instancedMesh = new THREE.InstancedMesh(grassMesh.geometry, grassMesh.material, grassCount)
+
+      const dummy = new THREE.Object3D()
+
+      for (let i = 0; i < grassCount; i++) {
+        const x = THREE.MathUtils.randFloat(-halfMap + grassSize, halfMap - grassSize)
+
+        const z = THREE.MathUtils.randFloat(-halfMap + grassSize, halfMap - grassSize)
+
+        dummy.position.set(x, size.y, z)
+
+        dummy.rotation.y = Math.random() * Math.PI
+
+        const scale = 2 // 占 2 格
+        dummy.scale.set(scale, scale, scale)
+
+        dummy.updateMatrix()
+        instancedMesh.setMatrixAt(i, dummy.matrix)
+      }
+
+      this.scene?.add(instancedMesh)
+    })
   }
 
   /**
@@ -353,6 +447,43 @@ class RoomStore extends BaseStore {
       undefined,
       err => this.logger()?.error(`加载人物失败: ${err}`)
     )
+  }
+
+  /**
+   * 加载柱子模型
+   */
+  @action
+  onLoadPillar(callback?: Function) {
+    const loader = new GLTFLoader()
+    loader.load('/models/pillar.glb', gltf => {
+      this.pillarModel = gltf.scene
+
+      // 关键：重置 scale，确保是原始尺寸
+      this.pillarModel.scale.set(1, 1, 1)
+      /*
+      this.pillarModel.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          (child as THREE.Mesh).geometry.center() // 将模型中心移动到几何中心
+        }
+      })
+       */
+      callback?.()
+    })
+  }
+
+  /**
+   * 加载树模型
+   */
+  @action
+  onLoadTree(callback?: Function) {
+    const loader = new GLTFLoader()
+    loader.load('/tree/quiver_tree_02_1k.gltf', gltf => {
+      this.treeModal = gltf.scene
+
+      // 关键：重置 scale，确保是原始尺寸
+      this.treeModal.scale.set(1, 1, 1)
+      callback?.()
+    })
   }
 
   /**
@@ -547,6 +678,102 @@ class RoomStore extends BaseStore {
     this.renderer?.render(this.scene!, this.camera!)
   }
 
+  /**
+   * 随机生成柱子
+   */
+  @action
+  async onGeneratePillars() {
+    try {
+      const pillars: Array<{ [K: string]: any }> = (await invoke('generate_pillars', { nums: 100 })) || []
+      console.log('pillars:', pillars)
+
+      // 加载树|柱子
+      this.onLoadTree(() => {
+        const modal = this.treeModal
+        if (!modal) return
+
+        const box = new THREE.Box3().setFromObject(modal)
+        const size = new THREE.Vector3()
+        box.getSize(size)
+
+        console.log('模型原始尺寸:', size)
+
+        for (const pillar of pillars) {
+          const mesh = modal.clone()
+
+          // 目标宽度
+          const targetSize = pillar.size
+
+          // 精确缩放
+          mesh.scale.set(targetSize / size.x, 5, targetSize / size.z)
+
+          // 更新矩阵
+          // mesh.updateMatrixWorld(true)
+
+          // 再测一次最终尺寸
+          /*
+          const newBox = new THREE.Box3().setFromObject(mesh)
+          const newSize = new THREE.Vector3()
+          newBox.getSize(newSize)
+
+          console.log('缩放后尺寸:', newSize)
+           */
+
+          mesh.position.set(pillar.x, 0, pillar.z)
+
+          this.scene?.add(mesh)
+        }
+      })
+    } catch (e) {
+      TOAST.show({ message: '随机生成柱子失败', type: 4 })
+      this.logger()?.error(`随机生成柱子失败: ${e}`)
+    }
+  }
+
+  /**
+   * 清除旧柱子
+   */
+  @action
+  clearPillars() {
+    this.scene?.traverse(obj => {
+      if (obj.userData.isPillar) {
+        this.scene?.remove(obj)
+      }
+    })
+  }
+
+  /**
+   * 随机生成石头
+   */
+  @action
+  async onGenerateStones() {
+    try {
+      const rocks: Array<{ [K: string]: any }> = (await invoke('generate_rocks', { numRocks: 1 })) || []
+      console.log('rocks:', rocks)
+
+      const loader = new GLTFLoader()
+      loader.load('/stone/namaqualand_boulder_02_1k.gltf', gltf => {
+        const rockModel = gltf.scene
+        // 模型加载完成后显示石头
+
+        rocks.forEach((data: { [K: string]: any } = {}) => {
+          const rock = rockModel.clone()
+
+          rock.position.set(data.position.x, data.position.y, data.position.z)
+          rock.scale.set(data.scale.x, data.scale.y, data.scale.z)
+
+          // 可选：随机旋转 Y 轴
+          rock.rotation.y = Math.random() * Math.PI * 2
+          console.log('rock:', rock)
+          this.scene!.add(rock)
+        })
+      })
+    } catch (e) {
+      TOAST.show({ message: '随机生成石头失败', type: 4 })
+      this.logger()?.error(`随机生成石头失败: ${e}`)
+    }
+  }
+
   @action
   onMoveCharacterToPoint(point: THREE.Vector3) {
     this.targetPosition.copy(point)
@@ -717,6 +944,8 @@ class RoomStore extends BaseStore {
         z: centerZ
       })
     }
+
+    return flagPlaced
   }
 }
 
