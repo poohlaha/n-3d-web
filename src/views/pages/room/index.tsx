@@ -146,8 +146,16 @@ const Room = (): ReactElement => {
           }
         })
 
+        // 清除旧路径
+        await roomStore.onClearPath()
+
         // 更新目标格子
-        await invoke('set_robot_target', { x: worldRes.x, z: worldRes.z })
+        const points: Array<{ [K: string]: number }> = await invoke('set_robot_target', {
+          x: worldRes.x,
+          z: worldRes.z
+        })
+        console.log('points:', points)
+        roomStore.onDrawPath(points || [])
 
         console.log('grid_to_world:', worldRes)
         // roomStore.onMoveCharacterToPoint(new THREE.Vector3(worldRes.x, 0, worldRes.z))

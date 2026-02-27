@@ -13,6 +13,9 @@ import { HDRLoader } from 'three/examples/jsm/loaders/HDRLoader.js'
 import { invoke } from '@tauri-apps/api/core'
 import Utils from '@utils/utils'
 import { TOAST } from '@utils/base'
+import { Line2 } from 'three/examples/jsm/lines/Line2.js'
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js'
 
 class RoomStore extends BaseStore {
   @observable scene: THREE.Scene | null = null
@@ -27,6 +30,7 @@ class RoomStore extends BaseStore {
   @observable person: THREE.Mesh | null = null // 小人
   @observable personPosition: { x: number; z: number } | null = null // 小人坐标
   @observable redFlagModel: THREE.Object3D | null = null
+  @observable currentLine: Line2 | null = null
 
   // 人物
   @observable mixers: Array<any> = []
@@ -370,7 +374,7 @@ class RoomStore extends BaseStore {
    */
   @action
   onLoadLittleGrass() {
-    const grassCount = 100
+    const grassCount = 200
     const grassSize = 2 // 占 2 格
     const halfMap = this.width / 2
 
@@ -909,7 +913,7 @@ class RoomStore extends BaseStore {
     const loader = new GLTFLoader()
     loader.load('/models/flag.glb', gltf => {
       const flagModel = gltf.scene
-      flagModel.position.set(point.x, point.y || 0, point.z)
+      flagModel.position.set(point.x, point.y || 1, point.z)
       this.scene!.add(flagModel)
 
       this.redFlagModel = flagModel
@@ -946,6 +950,65 @@ class RoomStore extends BaseStore {
     }
 
     return flagPlaced
+  }
+
+  /**
+   * 绘制路径
+   */
+  @action
+  onDrawPath(pathList: Array<{ [K: string]: number }> = []) {
+    if (!pathList || pathList.length < 2) return
+
+    // 先清除旧线
+    if (this.currentLine) {
+      this.scene?.remove(this.currentLine)
+      this.currentLine.geometry.dispose()
+      const material = this.currentLine.material as THREE.Material
+      material.dispose()
+      this.currentLine = null
+    }
+
+    const rawPoints = pathList.map(p => new THREE.Vector3(p.x, p.y + 0.1, p.z))
+
+    const curve = new THREE.CatmullRomCurve3(rawPoints)
+    const smoothPoints = curve.getPoints(100)
+
+    const positions: number[] = []
+    smoothPoints.forEach(p => {
+      positions.push(p.x, p.y, p.z)
+    })
+
+    const geometry = new LineGeometry()
+    geometry.setPositions(positions)
+
+    const material = new LineMaterial({
+      color: 0x00ffff,
+      linewidth: 5,
+      transparent: true,
+      opacity: 0.9,
+      depthTest: false
+    })
+
+    material.resolution.set(window.innerWidth, window.innerHeight)
+
+    this.currentLine = new Line2(geometry, material)
+    this.currentLine.computeLineDistances()
+    this.currentLine.renderOrder = 999
+
+    this.scene?.add(this.currentLine)
+  }
+
+  /**
+   * 清除路径
+   */
+  @action
+  async onClearPath() {
+    try {
+      await invoke('clear_robot_path', {})
+    } catch (e) {
+      this.logger()?.error(`清除机器人路径失败: ${e}`)
+      TOAST.show({ message: '清除机器人路径失败', type: 4 })
+    }
   }
 }
 
