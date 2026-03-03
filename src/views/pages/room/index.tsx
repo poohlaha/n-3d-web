@@ -22,9 +22,10 @@ const Room = (): ReactElement => {
 
   useMount(async () => {
     if (boxRef) {
+      await roomStore.clearObstacle()
       await roomStore.init(boxRef.current)
       await roomStore.onGeneratePillars()
-      // await roomStore.onGenerateStones()
+      await roomStore.onGenerateStones()
       onEvent()
     }
   })

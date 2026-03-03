@@ -46,6 +46,7 @@ class RoomStore extends BaseStore {
   // 柱子
   @observable pillarModel: THREE.Group | null = null
   @observable treeModal: THREE.Group | null = null
+  @observable rockModal: THREE.Group | null = null
 
   // 移动
   @observable targetPosition = new THREE.Vector3()
@@ -493,6 +494,21 @@ class RoomStore extends BaseStore {
   }
 
   /**
+   * 加载石头模型
+   */
+  @action
+  onLoadRock(callback?: Function) {
+    const loader = new GLTFLoader()
+    loader.load('/stone/namaqualand_boulder_02_1k.gltf', gltf => {
+      this.rockModal = gltf.scene
+
+      // 关键：重置 scale，确保是原始尺寸
+      this.rockModal.scale.set(1, 1, 1)
+      callback?.()
+    })
+  }
+
+  /**
    * 铺设地砖
    */
   @action
@@ -605,7 +621,7 @@ class RoomStore extends BaseStore {
     if (!this.isMoving) return
     if (this.isUpdating) return // 防止并发
     if (this.action !== this.ACTIONS[1].value && this.action !== this.ACTIONS[2].value) {
-      this.action = this.ACTIONS[1].value
+      await this.onSetAction(this.ACTIONS[1].value)
     }
 
     this.isUpdating = true
@@ -631,7 +647,7 @@ class RoomStore extends BaseStore {
 
     // 恢复 idle 状态
     if (!this.isMoving) {
-      this.action = this.ACTIONS[0].value
+      await this.onSetAction(this.ACTIONS[0].value)
       const idleAction = this.mixerActions[this.ACTIONS[0].value]
       idleAction.reset().setEffectiveWeight(1).play()
       this.currentAction?.crossFadeTo(idleAction, 0.2, true)
@@ -699,12 +715,35 @@ class RoomStore extends BaseStore {
   }
 
   /**
+   * 清除障碍物
+   */
+  @action
+  async clearObstacle() {
+    try {
+      await invoke('clear_obstacles', {})
+      this.scene?.traverse(obj => {
+        if (obj.userData.isPillar) {
+          this.scene?.remove(obj)
+        }
+
+        if (obj.userData.isRock) {
+          this.scene?.remove(obj)
+        }
+      })
+    } catch (e) {
+      this.logger()?.error(`清除障碍物失败: ${e}`)
+    }
+  }
+
+  /**
    * 随机生成柱子
    */
   @action
   async onGeneratePillars() {
     try {
-      const pillars: Array<{ [K: string]: any }> = (await invoke('generate_pillars', { nums: 100 })) || []
+      let pillars: Array<{ [K: string]: any }> = (await invoke('generate_pillars', { nums: 60 })) || []
+      pillars = pillars.filter((item: { [K: string]: any }) => item.kind === 'pillar') || []
+      console.log('pillars:', pillars)
 
       // 加载树|柱子
       this.onLoadTree(() => {
@@ -718,11 +757,8 @@ class RoomStore extends BaseStore {
         for (const pillar of pillars) {
           const mesh = modal.clone()
 
-          // 目标宽度
-          const targetSize = pillar.size
-
           // 精确缩放
-          mesh.scale.set(targetSize / size.x, 5, targetSize / size.z)
+          mesh.scale.set(pillar.width / size.x, 5, pillar.depth / size.z)
 
           // 更新矩阵
           // mesh.updateMatrixWorld(true)
@@ -747,40 +783,33 @@ class RoomStore extends BaseStore {
   }
 
   /**
-   * 清除旧柱子
-   */
-  @action
-  clearPillars() {
-    this.scene?.traverse(obj => {
-      if (obj.userData.isPillar) {
-        this.scene?.remove(obj)
-      }
-    })
-  }
-
-  /**
    * 随机生成石头
    */
   @action
   async onGenerateStones() {
     try {
-      const rocks: Array<{ [K: string]: any }> = (await invoke('generate_rocks', { numRocks: 1 })) || []
+      let rocks: Array<{ [K: string]: any }> = (await invoke('generate_rocks', { nums: 10 })) || []
+      rocks = rocks.filter((item: { [K: string]: any }) => item.kind === 'rock') || []
+      console.log('rocks:', rocks)
 
-      const loader = new GLTFLoader()
-      loader.load('/stone/namaqualand_boulder_02_1k.gltf', gltf => {
-        const rockModel = gltf.scene
-        // 模型加载完成后显示石头
+      this.onLoadRock(() => {
+        const modal = this.rockModal
+        if (!modal) return
 
-        rocks.forEach((data: { [K: string]: any } = {}) => {
-          const rock = rockModel.clone()
+        const box = new THREE.Box3().setFromObject(modal)
+        const size = new THREE.Vector3()
+        box.getSize(size)
 
-          rock.position.set(data.position.x, data.position.y, data.position.z)
-          rock.scale.set(data.scale.x, data.scale.y, data.scale.z)
+        for (const rock of rocks) {
+          const mesh = modal.clone()
 
-          // 可选：随机旋转 Y 轴
-          rock.rotation.y = Math.random() * Math.PI * 2
-          this.scene!.add(rock)
-        })
+          // 精确缩放
+          mesh.scale.set(rock.width / size.x, 5, rock.depth / size.z)
+
+          mesh.position.set(rock.x, 0, rock.z)
+
+          this.scene?.add(mesh)
+        }
       })
     } catch (e) {
       TOAST.show({ message: '随机生成石头失败', type: 4 })
