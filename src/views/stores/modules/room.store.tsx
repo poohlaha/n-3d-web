@@ -61,6 +61,7 @@ class RoomStore extends BaseStore {
   // 机器人占用格子数
   @observable characterOccupyWidth: number = 1
   @observable characterOccupyHeight: number = 1
+  @observable fullPath: Array<{ x: number; y: number; z: number }> = [] // 原始路径
 
   readonly ACTIONS: Array<{ [K: string]: any }> = [
     {
@@ -126,6 +127,9 @@ class RoomStore extends BaseStore {
   ]
 
   @observable emote: string = ''
+  @observable panelProps: { [K: string]: any } = {
+    followPerspective: true // 跟随视角
+  }
 
   /**
    * 初始化
@@ -325,7 +329,6 @@ class RoomStore extends BaseStore {
     let point = { x: 0, y: 0, z: 0 }
     try {
       point = await invoke('get_robot_point', {})
-      console.log('point: ', point)
     } catch (e) {
       this.logger()?.error(`获取机器人初始坐标失败: ${e}`)
     }
@@ -432,7 +435,6 @@ class RoomStore extends BaseStore {
         const model = gltf.scene
         model.scale.set(1, 1, 1)
         model.position.set(point.x, point.y || 0, point.z) // 放在格子中央
-        console.log('model position:', model.position)
         this.scene?.add(model)
 
         this.character = model
@@ -602,7 +604,9 @@ class RoomStore extends BaseStore {
   async onUpdateRobotPosition(delta: number) {
     if (!this.isMoving) return
     if (this.isUpdating) return // 防止并发
-    if (this.action !== this.ACTIONS[1].value && this.action !== this.ACTIONS[2].value) return
+    if (this.action !== this.ACTIONS[1].value && this.action !== this.ACTIONS[2].value) {
+      this.action = this.ACTIONS[1].value
+    }
 
     this.isUpdating = true
     const state: { [K: string]: any } = await invoke('on_update_robot_position', { delta })
@@ -610,8 +614,20 @@ class RoomStore extends BaseStore {
     this.character!.position.set(state.position.x, state.position.y || 0, state.position.z)
     this.character!.rotation.y = state.rotationY
 
+    if (this.camera && this.character) {
+      if (this.panelProps.followPerspective) {
+        this.camera.lookAt(this.character.position)
+      } else {
+        this.camera.lookAt(0, 0, 0)
+      }
+    }
+
     this.isMoving = state.isMoving
     this.isUpdating = false
+
+    if (this.fullPath && this.fullPath.length > 0) {
+      this.onDrawPath(this.fullPath.slice(state.pathIndex))
+    }
 
     // 恢复 idle 状态
     if (!this.isMoving) {
@@ -689,7 +705,6 @@ class RoomStore extends BaseStore {
   async onGeneratePillars() {
     try {
       const pillars: Array<{ [K: string]: any }> = (await invoke('generate_pillars', { nums: 100 })) || []
-      console.log('pillars:', pillars)
 
       // 加载树|柱子
       this.onLoadTree(() => {
@@ -699,8 +714,6 @@ class RoomStore extends BaseStore {
         const box = new THREE.Box3().setFromObject(modal)
         const size = new THREE.Vector3()
         box.getSize(size)
-
-        console.log('模型原始尺寸:', size)
 
         for (const pillar of pillars) {
           const mesh = modal.clone()
@@ -720,7 +733,6 @@ class RoomStore extends BaseStore {
           const newSize = new THREE.Vector3()
           newBox.getSize(newSize)
 
-          console.log('缩放后尺寸:', newSize)
            */
 
           mesh.position.set(pillar.x, 0, pillar.z)
@@ -753,7 +765,6 @@ class RoomStore extends BaseStore {
   async onGenerateStones() {
     try {
       const rocks: Array<{ [K: string]: any }> = (await invoke('generate_rocks', { numRocks: 1 })) || []
-      console.log('rocks:', rocks)
 
       const loader = new GLTFLoader()
       loader.load('/stone/namaqualand_boulder_02_1k.gltf', gltf => {
@@ -768,7 +779,6 @@ class RoomStore extends BaseStore {
 
           // 可选：随机旋转 Y 轴
           rock.rotation.y = Math.random() * Math.PI * 2
-          console.log('rock:', rock)
           this.scene!.add(rock)
         })
       })
@@ -913,10 +923,17 @@ class RoomStore extends BaseStore {
     const loader = new GLTFLoader()
     loader.load('/models/flag.glb', gltf => {
       const flagModel = gltf.scene
-      flagModel.position.set(point.x, point.y || 1, point.z)
+      flagModel.position.set(point.x, point.y || 0, point.z)
       this.scene!.add(flagModel)
 
       this.redFlagModel = flagModel
+      if (this.character) {
+        const robotPos = this.character.position
+        const dx = robotPos.x - point.x
+        const dz = robotPos.z - point.z
+        const yaw = Math.atan2(dx, dz)
+        flagModel.rotation.y = yaw
+      }
     })
   }
 
@@ -924,13 +941,14 @@ class RoomStore extends BaseStore {
    * 设置小红旗
    */
   @action
-  async onPlaceFlag(intersectionPoint: { [K: string]: any } = {}) {
+  async onPlaceFlag(worldRes: { [K: string]: any } = {}) {
     const flagPlaced: boolean = await invoke('set_place_flag', {
-      x: intersectionPoint.x,
-      z: intersectionPoint.z
+      x: worldRes.x,
+      z: worldRes.z
     })
 
     // 4转格子坐标（200×200 平面，每格 1 单位）
+    /*
     let gx = Math.floor(intersectionPoint.x + this.width / 2)
     let gz = Math.floor(intersectionPoint.z + this.height / 2)
 
@@ -941,11 +959,12 @@ class RoomStore extends BaseStore {
     // 计算格子中心 world 坐标
     const centerX = gx - this.width / 2 + 0.5
     const centerZ = gz - this.height / 2 + 0.5
+     */
 
     if (flagPlaced) {
       this.onLoadRedFlag({
-        x: centerX,
-        z: centerZ
+        x: worldRes.x,
+        z: worldRes.z
       })
     }
 
@@ -957,8 +976,6 @@ class RoomStore extends BaseStore {
    */
   @action
   onDrawPath(pathList: Array<{ [K: string]: number }> = []) {
-    if (!pathList || pathList.length < 2) return
-
     // 先清除旧线
     if (this.currentLine) {
       this.scene?.remove(this.currentLine)
@@ -967,6 +984,8 @@ class RoomStore extends BaseStore {
       material.dispose()
       this.currentLine = null
     }
+
+    if (!pathList || pathList.length < 2) return
 
     const rawPoints = pathList.map(p => new THREE.Vector3(p.x, p.y + 0.1, p.z))
 

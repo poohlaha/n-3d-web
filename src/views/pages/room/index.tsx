@@ -12,7 +12,7 @@ import RouterUrls from '@route/router.url.toml'
 import useMount from '@hooks/useMount'
 import * as THREE from 'three'
 import { invoke } from '@tauri-apps/api/core'
-import { Collapse, Select } from 'antd'
+import { Checkbox, Collapse, Select } from 'antd'
 import { TOAST } from '@utils/base'
 
 const Room = (): ReactElement => {
@@ -98,7 +98,6 @@ const Room = (): ReactElement => {
 
       // 计算鼠标 NDC 坐标
       const rect = roomStore.renderer!.domElement.getBoundingClientRect()
-      console.log('rect:', rect)
       // roomStore.mouse.x = (event.clientX / window.innerWidth) * 2 - 1
       // roomStore.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1
       roomStore.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
@@ -115,7 +114,26 @@ const Room = (): ReactElement => {
       const hit = roomStore.raycaster!.ray.intersectPlane(roomStore.groundPlane, intersectionPoint)
 
       if (hit) {
-        const flag = await roomStore.onPlaceFlag(intersectionPoint)
+        roomStore.logger()?.info(`world_to_grid: ${JSON.stringify(intersectionPoint)}`)
+        // 限制在边界范围内
+        const res: { [K: string]: number } = await invoke('world_to_grid', {
+          grid: {
+            x: intersectionPoint.x,
+            z: intersectionPoint.z
+          }
+        })
+
+        roomStore.logger()?.info(`world_to_grid: ${JSON.stringify(res)}`)
+
+        // 直接获取 world 坐标更新人物
+        const worldRes: { [K: string]: number } = await invoke('grid_to_world', {
+          grid: {
+            gx: res.x,
+            gz: res.z
+          }
+        })
+
+        const flag = await roomStore.onPlaceFlag(worldRes)
         if (!flag) {
           roomStore.logger()?.warn('当前位置已有障碍物 ...')
           TOAST.show({ message: '当前位置已有障碍物', type: 4 })
@@ -127,25 +145,6 @@ const Room = (): ReactElement => {
           await roomStore.onSetAction(roomStore.ACTIONS[1].value)
         }
 
-        console.log('intersectionPoint', intersectionPoint)
-        // 限制在边界范围内
-        const res: { [K: string]: number } = await invoke('world_to_grid', {
-          grid: {
-            x: intersectionPoint.x,
-            z: intersectionPoint.z
-          }
-        })
-
-        console.log('world_to_grid: ', res)
-
-        // 直接获取 world 坐标更新人物
-        const worldRes: { [K: string]: number } = await invoke('grid_to_world', {
-          grid: {
-            gx: res.x,
-            gz: res.z
-          }
-        })
-
         // 清除旧路径
         await roomStore.onClearPath()
 
@@ -154,10 +153,10 @@ const Room = (): ReactElement => {
           x: worldRes.x,
           z: worldRes.z
         })
-        console.log('points:', points)
+        roomStore.fullPath = points || []
         roomStore.onDrawPath(points || [])
 
-        console.log('grid_to_world:', worldRes)
+        roomStore.logger()?.info(`grid_to_world: ${JSON.stringify(worldRes)}`)
         // roomStore.onMoveCharacterToPoint(new THREE.Vector3(worldRes.x, 0, worldRes.z))
         roomStore.isMoving = true
 
@@ -179,7 +178,7 @@ const Room = (): ReactElement => {
           halfHeight - characterRadius
         )
 
-        console.log('点击位置:', intersectionPoint)
+        roomStore.logger()?.info(`world_to_grid: ${JSON.stringify(intersectionPoint)}`)
         roomStore.onMoveCharacterToPoint(intersectionPoint)
          */
 
@@ -257,6 +256,23 @@ const Room = (): ReactElement => {
     )
   }
 
+  const getCollapsePropsHtml = () => {
+    return (
+      <div className="flex-direction-column">
+        <div className="flex-align-center">
+          <Checkbox
+            checked={roomStore.panelProps.followPerspective}
+            onChange={e => {
+              roomStore.panelProps.followPerspective = e.target.checked
+            }}
+          >
+            跟随视角
+          </Checkbox>
+        </div>
+      </div>
+    )
+  }
+
   const render = () => {
     return (
       <Page
@@ -276,8 +292,13 @@ const Room = (): ReactElement => {
               label: '控制面板',
               children: (
                 <Collapse
-                  defaultActiveKey={['11', '12']}
+                  defaultActiveKey={['10', '11']}
                   items={[
+                    {
+                      key: '10',
+                      label: '属性',
+                      children: getCollapsePropsHtml()
+                    },
                     {
                       key: '11',
                       label: '动作',
